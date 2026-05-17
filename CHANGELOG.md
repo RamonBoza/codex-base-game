@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.1 - JSONSerialize Hotfix
+
+Release date: 2026-05-17
+
+### Fixed
+
+- Added the Unity built-in `com.unity.modules.jsonserialize` module required by `JsonUtility` in `LocalIdentityService`.
+- Updated product version to `0.2.1`.
+
 ## v0.2.0 - Identity & Authentication Foundations
 
 Release date: 2026-05-17

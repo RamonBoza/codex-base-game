@@ -1,6 +1,6 @@
 # Cozy Social Game
 
-Version actual: `v0.2.0`
+Version actual: `v0.2.1`
 
 Base inicial para un cozy social game 2D en Unity 6.4.
 
@@ -37,4 +37,4 @@ Base inicial para un cozy social game 2D en Unity 6.4.
 
 ## Estado de version
 
-`v0.2.0` cierra la base de identidad: login/registro local, sesion persistida, proveedores SSO de desarrollo y entrada autenticada al mundo.
+`v0.2.1` cierra la base de identidad: login/registro local, sesion persistida, proveedores SSO de desarrollo y entrada autenticada al mundo.
