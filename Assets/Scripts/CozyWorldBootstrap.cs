@@ -18,11 +18,12 @@ public sealed class CozyWorldBootstrap : MonoBehaviour
     private static readonly Color FenceColor = new Color32(137, 100, 68, 255);
 
     [Header("Startup")]
-    [SerializeField] private bool buildOnAwake = true;
+    [SerializeField] private bool buildOnAwake;
     [SerializeField] private Vector2 playerSpawn = new Vector2(-8f, -2f);
     [SerializeField] private float playerMoveSpeed = 4.25f;
     [SerializeField] private float cameraZoom = 7.5f;
 
+    private string authenticatedPlayerName = "Player";
     private static Sprite squareSprite;
     private static Sprite treeSprite;
     private static Sprite playerSprite;
@@ -60,6 +61,16 @@ public sealed class CozyWorldBootstrap : MonoBehaviour
             EditorSceneManager.MarkSceneDirty(gameObject.scene);
         }
 #endif
+    }
+
+    public void SetAuthenticatedPlayer(string playerName)
+    {
+        authenticatedPlayerName = string.IsNullOrWhiteSpace(playerName) ? "Player" : playerName.Trim();
+    }
+
+    public void ClearWorld()
+    {
+        ClearGeneratedWorld();
     }
 
     private void ClearGeneratedWorld()
@@ -176,7 +187,7 @@ public sealed class CozyWorldBootstrap : MonoBehaviour
 
     private GameObject BuildPlayer(Transform parent)
     {
-        GameObject player = new GameObject("Player");
+        GameObject player = new GameObject($"Player - {authenticatedPlayerName}");
         player.transform.SetParent(parent, false);
         player.transform.localPosition = playerSpawn;
 

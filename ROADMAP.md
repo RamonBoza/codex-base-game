@@ -58,22 +58,24 @@ Release notes:
 
 ### v0.2 - Identity & Authentication Foundations
 
+Status: Released as `v0.2.0`.
+
 Goal: Allow players to authenticate and enter the game world.
 
 Client:
 
 - Login screen.
-- Google SSO button.
-- Apple SSO button.
+- Google SSO development button.
+- Apple SSO development button.
 - Email/password form.
 - Authenticated transition into the world scene.
 
-Backend:
+Identity foundation:
 
-- Identity service.
-- User persistence.
-- JWT generation and validation.
-- Identity provider linking.
+- Local identity service with a backend-ready shape.
+- User persistence in Unity persistent data.
+- Development session token generation.
+- Identity provider placeholders for Google and Apple.
 
 Done when:
 
@@ -81,6 +83,12 @@ Done when:
 - A returning player can log in.
 - Unity receives a valid session token.
 - Authenticated player reaches the game world.
+
+Release notes:
+
+- World generation is gated behind authentication.
+- Email/password register and login work locally.
+- Google/Apple buttons create development-provider sessions until real OAuth credentials and backend endpoints exist.
 
 Explicitly not included:
 
@@ -433,6 +441,6 @@ The client should present state and request actions, not decide authoritative ou
 
 ## Current Next Step
 
-Recommended next milestone: `v0.2 - Identity & Authentication Foundations`.
+Recommended next milestone: `v0.3 - World Exploration Prototype`.
 
-However, because the Unity world prototype already exists, it is also reasonable to advance `v0.3` in parallel with backend planning if the immediate goal is to keep the game visually playable while the backend is designed.
+`v0.2` is now a local identity foundation. Real Google/Apple OAuth and server-side identity validation should be introduced when the backend is created, but the client flow is already in place for replacing the local adapter.

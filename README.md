@@ -1,6 +1,6 @@
 # Cozy Social Game
 
-Version actual: `v0.1.0`
+Version actual: `v0.2.0`
 
 Base inicial para un cozy social game 2D en Unity 6.4.
 
@@ -11,6 +11,9 @@ Base inicial para un cozy social game 2D en Unity 6.4.
 - Personaje base con movimiento en 4 direcciones usando `WASD` o flechas.
 - Camara ortografica que sigue al personaje.
 - Sprites temporales generados por codigo, para poder empezar sin assets externos.
+- Pantalla de login/registro local antes de entrar al mundo.
+- Sesion persistida localmente con token de desarrollo.
+- Botones SSO de desarrollo para Google y Apple.
 - Roadmap versionado en `ROADMAP.md`.
 
 ## Como abrirlo
@@ -20,6 +23,7 @@ Base inicial para un cozy social game 2D en Unity 6.4.
 3. Elige esta carpeta del repo.
 4. Abre la escena `Assets/Scenes/Main.unity`.
 5. Pulsa Play.
+6. Crea una cuenta local, inicia sesion o usa un proveedor SSO de desarrollo.
 
 ## Controles
 
@@ -33,4 +37,4 @@ Base inicial para un cozy social game 2D en Unity 6.4.
 
 ## Estado de version
 
-`v0.1.0` cierra la base jugable inicial: proyecto Unity 2D, escena principal, mapa inicial, jugador, camara, colisiones, roadmap y skill Codex de Unity documentado.
+`v0.2.0` cierra la base de identidad: login/registro local, sesion persistida, proveedores SSO de desarrollo y entrada autenticada al mundo.
