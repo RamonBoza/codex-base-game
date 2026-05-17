@@ -8,8 +8,12 @@ using UnityEngine;
 public sealed class LocalIdentityService
 {
     private const string EmailProvider = "email";
-    private const string GoogleProvider = "google-dev";
+    private const string GoogleProvider = "google";
     private const string AppleProvider = "apple-dev";
+    private const string PasswordAlgorithm = "pbkdf2-sha256";
+    private const int PasswordIterations = 210000;
+    private const int PasswordSaltBytes = 16;
+    private const int PasswordHashBytes = 32;
 
     private readonly string databasePath;
     private readonly string sessionPath;
@@ -70,15 +74,17 @@ public sealed class LocalIdentityService
             return false;
         }
 
-        string salt = Guid.NewGuid().ToString("N");
+        string salt = CreatePasswordSalt();
         StoredUser user = new StoredUser
         {
             userId = Guid.NewGuid().ToString("N"),
             email = email,
             displayName = displayName,
             provider = EmailProvider,
+            passwordAlgorithm = PasswordAlgorithm,
+            passwordIterations = PasswordIterations,
             passwordSalt = salt,
-            passwordHash = HashPassword(password, salt),
+            passwordHash = HashPasswordPbkdf2(password, salt, PasswordIterations),
             createdAtUtc = DateTime.UtcNow.ToString("O")
         };
 
@@ -98,13 +104,69 @@ public sealed class LocalIdentityService
 
         StoredUser user = FindUserByEmail(email);
 
-        if (user == null || user.passwordHash != HashPassword(password, user.passwordSalt))
+        if (user == null || !VerifyPassword(user, password))
         {
             error = "Email o contrasena incorrectos.";
             return false;
         }
 
+        UpgradePasswordHashIfNeeded(user, password);
         session = CreateSession(user, EmailProvider);
+        SaveSession(session);
+        error = null;
+        return true;
+    }
+
+    public bool LoginWithGoogle(GoogleOAuthProfile profile, string idToken, out AuthSession session, out string error)
+    {
+        session = null;
+
+        if (profile == null || string.IsNullOrWhiteSpace(profile.sub))
+        {
+            error = "Google no devolvio un perfil valido.";
+            return false;
+        }
+
+        string email = NormalizeEmail(profile.email);
+
+        if (!IsValidEmail(email) || !profile.email_verified)
+        {
+            error = "Google no devolvio un email verificado.";
+            return false;
+        }
+
+        StoredUser user = FindUserByProviderSubject(GoogleProvider, profile.sub);
+
+        user ??= FindUserByEmail(email);
+
+        if (user == null)
+        {
+            user = new StoredUser
+            {
+                userId = Guid.NewGuid().ToString("N"),
+                email = email,
+                displayName = NormalizeDisplayName(profile.name, email),
+                provider = GoogleProvider,
+                externalSubject = profile.sub,
+                avatarUrl = profile.picture,
+                createdAtUtc = DateTime.UtcNow.ToString("O")
+            };
+
+            database.users.Add(user);
+        }
+        else
+        {
+            user.email = email;
+            user.displayName = NormalizeDisplayName(profile.name, email);
+            user.provider = GoogleProvider;
+            user.externalSubject = profile.sub;
+            user.avatarUrl = profile.picture;
+        }
+
+        session = CreateSession(user, GoogleProvider);
+        session.sessionToken = null;
+        session.sessionToken = CreateGoogleBackedDevelopmentToken(session, idToken);
+        SaveDatabase();
         SaveSession(session);
         error = null;
         return true;
@@ -114,13 +176,13 @@ public sealed class LocalIdentityService
     {
         session = null;
 
-        if (provider != GoogleProvider && provider != AppleProvider)
+        if (provider != AppleProvider)
         {
             error = "Proveedor de identidad no soportado.";
             return false;
         }
 
-        string email = provider == GoogleProvider ? "google.player@local.cozy" : "apple.player@local.cozy";
+        string email = "apple.player@local.cozy";
         StoredUser user = FindUserByEmail(email);
 
         if (user == null)
@@ -129,7 +191,7 @@ public sealed class LocalIdentityService
             {
                 userId = Guid.NewGuid().ToString("N"),
                 email = email,
-                displayName = provider == GoogleProvider ? "Google Player" : "Apple Player",
+                displayName = "Apple Player",
                 provider = provider,
                 createdAtUtc = DateTime.UtcNow.ToString("O")
             };
@@ -192,6 +254,8 @@ public sealed class LocalIdentityService
             email = user.email,
             displayName = user.displayName,
             provider = provider,
+            externalSubject = user.externalSubject,
+            avatarUrl = user.avatarUrl,
             issuedAtUtc = user.lastLoginAtUtc
         };
 
@@ -207,6 +271,11 @@ public sealed class LocalIdentityService
     private StoredUser FindUserById(string userId)
     {
         return database.users.Find(user => user.userId == userId);
+    }
+
+    private StoredUser FindUserByProviderSubject(string provider, string externalSubject)
+    {
+        return database.users.Find(user => user.provider == provider && user.externalSubject == externalSubject);
     }
 
     private static string NormalizeEmail(string email)
@@ -230,7 +299,29 @@ public sealed class LocalIdentityService
         return !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".");
     }
 
-    private static string HashPassword(string password, string salt)
+    private static string CreatePasswordSalt()
+    {
+        byte[] saltBytes = new byte[PasswordSaltBytes];
+
+        using (RandomNumberGenerator generator = RandomNumberGenerator.Create())
+        {
+            generator.GetBytes(saltBytes);
+        }
+
+        return Convert.ToBase64String(saltBytes);
+    }
+
+    private static string HashPasswordPbkdf2(string password, string salt, int iterations)
+    {
+        byte[] saltBytes = Convert.FromBase64String(salt);
+
+        using (Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(password, saltBytes, iterations, HashAlgorithmName.SHA256))
+        {
+            return Convert.ToBase64String(pbkdf2.GetBytes(PasswordHashBytes));
+        }
+    }
+
+    private static string HashPasswordSha256Legacy(string password, string salt)
     {
         using (SHA256 sha256 = SHA256.Create())
         {
@@ -240,11 +331,71 @@ public sealed class LocalIdentityService
         }
     }
 
+    private static bool VerifyPassword(StoredUser user, string password)
+    {
+        string expectedHash;
+
+        if (user.passwordAlgorithm == PasswordAlgorithm)
+        {
+            int iterations = user.passwordIterations > 0 ? user.passwordIterations : PasswordIterations;
+            expectedHash = HashPasswordPbkdf2(password, user.passwordSalt, iterations);
+        }
+        else
+        {
+            expectedHash = HashPasswordSha256Legacy(password, user.passwordSalt);
+        }
+
+        return FixedTimeEquals(expectedHash, user.passwordHash);
+    }
+
+    private void UpgradePasswordHashIfNeeded(StoredUser user, string password)
+    {
+        if (user.passwordAlgorithm == PasswordAlgorithm && user.passwordIterations >= PasswordIterations)
+        {
+            return;
+        }
+
+        user.passwordAlgorithm = PasswordAlgorithm;
+        user.passwordIterations = PasswordIterations;
+        user.passwordSalt = CreatePasswordSalt();
+        user.passwordHash = HashPasswordPbkdf2(password, user.passwordSalt, user.passwordIterations);
+        SaveDatabase();
+    }
+
+    private static bool FixedTimeEquals(string left, string right)
+    {
+        if (left == null || right == null)
+        {
+            return false;
+        }
+
+        byte[] leftBytes = Encoding.UTF8.GetBytes(left);
+        byte[] rightBytes = Encoding.UTF8.GetBytes(right);
+        int difference = leftBytes.Length ^ rightBytes.Length;
+        int length = Mathf.Min(leftBytes.Length, rightBytes.Length);
+
+        for (int i = 0; i < length; i++)
+        {
+            difference |= leftBytes[i] ^ rightBytes[i];
+        }
+
+        return difference == 0;
+    }
+
     private static string CreateDevelopmentToken(AuthSession session)
     {
         string header = Base64UrlEncode("{\"alg\":\"dev-local\",\"typ\":\"JWT\"}");
         string payload = Base64UrlEncode(JsonUtility.ToJson(session));
-        string signature = Base64UrlEncode(HashPassword(payload, session.userId));
+        string signature = Base64UrlEncode(HashPasswordSha256Legacy(payload, session.userId));
+        return $"{header}.{payload}.{signature}";
+    }
+
+    private static string CreateGoogleBackedDevelopmentToken(AuthSession session, string idToken)
+    {
+        string tokenSeed = string.IsNullOrEmpty(idToken) ? session.userId : idToken;
+        string header = Base64UrlEncode("{\"alg\":\"google-dev-local\",\"typ\":\"JWT\"}");
+        string payload = Base64UrlEncode(JsonUtility.ToJson(session));
+        string signature = Base64UrlEncode(HashPasswordSha256Legacy(payload, tokenSeed));
         return $"{header}.{payload}.{signature}";
     }
 
@@ -282,6 +433,10 @@ public sealed class LocalIdentityService
         public string email;
         public string displayName;
         public string provider;
+        public string externalSubject;
+        public string avatarUrl;
+        public string passwordAlgorithm;
+        public int passwordIterations;
         public string passwordSalt;
         public string passwordHash;
         public string createdAtUtc;

@@ -3,15 +3,22 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class LoginScreenController : MonoBehaviour
 {
+    private const string GoogleClientIdPrefsKey = "cozy.googleOAuthClientId";
+
     [SerializeField] private CozyWorldBootstrap worldBootstrap;
     [SerializeField] private bool restoreSessionOnStart = true;
+    [SerializeField] private string googleOAuthClientId = string.Empty;
+    [SerializeField] private int googleOAuthTimeoutSeconds = 120;
 
     private LocalIdentityService identityService;
+    private GoogleOAuthService googleOAuthService;
     private AuthSession currentSession;
     private bool showRegisterForm = true;
+    private bool isAuthenticating;
     private string email = "player@cozy.local";
     private string password = "cozy123";
     private string displayName = "Cozy Player";
+    private string googleClientIdInput = string.Empty;
     private string statusMessage = "Inicia sesion o crea una cuenta para entrar al mundo.";
     private Vector2 scrollPosition;
 
@@ -20,6 +27,8 @@ public sealed class LoginScreenController : MonoBehaviour
     private void Awake()
     {
         identityService = new LocalIdentityService();
+        googleOAuthService = new GoogleOAuthService();
+        googleClientIdInput = PlayerPrefs.GetString(GoogleClientIdPrefsKey, googleOAuthClientId);
 
         if (worldBootstrap == null)
         {
@@ -59,7 +68,7 @@ public sealed class LoginScreenController : MonoBehaviour
 
         GUILayout.Label("Cozy Social Game");
         GUILayout.Space(8f);
-        GUILayout.Label("v0.2.0 - Identity Foundations");
+        GUILayout.Label("v0.2.2 - Identity Foundations");
         GUILayout.Space(16f);
 
         GUILayout.Label(showRegisterForm ? "Modo actual: registro" : "Modo actual: login");
@@ -85,29 +94,43 @@ public sealed class LoginScreenController : MonoBehaviour
 
         GUILayout.Space(12f);
 
+        GUI.enabled = !isAuthenticating;
+
         if (GUILayout.Button(showRegisterForm ? "Crear cuenta" : "Entrar"))
         {
             SubmitEmailForm();
         }
 
         GUILayout.Space(10f);
-        GUILayout.Label("Proveedores SSO de desarrollo");
+        GUILayout.Label("Google SSO");
+        GUILayout.Label("OAuth Client ID (Desktop app)");
+        googleClientIdInput = GUILayout.TextField(googleClientIdInput, 160);
 
-        if (GUILayout.Button("Continuar con Google"))
+        if (GUILayout.Button("Guardar Client ID"))
         {
-            SubmitDevelopmentProvider("google-dev");
+            SaveGoogleClientId();
         }
 
-        if (GUILayout.Button("Continuar con Apple"))
+        if (GUILayout.Button(isAuthenticating ? "Esperando Google..." : "Continuar con Google"))
         {
-            SubmitDevelopmentProvider("apple-dev");
+            StartCoroutine(GoogleSignInRoutine());
         }
+
+        GUILayout.Space(10f);
+        GUILayout.Label("Apple SSO");
+
+        if (GUILayout.Button("Apple pendiente"))
+        {
+            statusMessage = "Apple SSO queda pendiente hasta configurar Apple Developer y backend.";
+        }
+
+        GUI.enabled = true;
 
         GUILayout.Space(12f);
         GUILayout.Label(statusMessage);
 
         GUILayout.Space(16f);
-        GUILayout.Label("Nota: Google/Apple usan proveedores locales de desarrollo hasta conectar credenciales reales y backend.");
+        GUILayout.Label("Nota: el login local es solo para desarrollo. Google usa OAuth real con PKCE, pero la validacion final debera vivir en backend.");
 
         GUILayout.EndScrollView();
         GUILayout.EndArea();
@@ -140,6 +163,11 @@ public sealed class LoginScreenController : MonoBehaviour
 
     private void SubmitEmailForm()
     {
+        if (isAuthenticating)
+        {
+            return;
+        }
+
         bool success = showRegisterForm
             ? identityService.RegisterWithEmail(email, password, displayName, out AuthSession session, out string error)
             : identityService.LoginWithEmail(email, password, out session, out error);
@@ -153,12 +181,48 @@ public sealed class LoginScreenController : MonoBehaviour
         statusMessage = error;
     }
 
-    private void SubmitDevelopmentProvider(string provider)
+    private void SaveGoogleClientId()
     {
-        if (identityService.LoginWithDevelopmentProvider(provider, out AuthSession session, out string error))
+        googleClientIdInput = googleClientIdInput.Trim();
+        googleOAuthClientId = googleClientIdInput;
+        PlayerPrefs.SetString(GoogleClientIdPrefsKey, googleClientIdInput);
+        PlayerPrefs.Save();
+        statusMessage = string.IsNullOrWhiteSpace(googleClientIdInput)
+            ? "Google Client ID borrado."
+            : "Google Client ID guardado localmente.";
+    }
+
+    private System.Collections.IEnumerator GoogleSignInRoutine()
+    {
+        if (isAuthenticating)
         {
-            EnterWorld(session, "Sesion SSO de desarrollo iniciada.");
-            return;
+            yield break;
+        }
+
+        SaveGoogleClientId();
+        isAuthenticating = true;
+        statusMessage = "Abriendo Google en el navegador...";
+
+        GoogleOAuthResult result = null;
+        yield return googleOAuthService.SignIn(googleClientIdInput, googleOAuthTimeoutSeconds, oauthResult => result = oauthResult);
+        isAuthenticating = false;
+
+        if (result == null)
+        {
+            statusMessage = "Google SSO no devolvio resultado.";
+            yield break;
+        }
+
+        if (!result.IsSuccess)
+        {
+            statusMessage = result.Error;
+            yield break;
+        }
+
+        if (identityService.LoginWithGoogle(result.Profile, result.IdToken, out AuthSession session, out string error))
+        {
+            EnterWorld(session, "Sesion iniciada con Google.");
+            yield break;
         }
 
         statusMessage = error;

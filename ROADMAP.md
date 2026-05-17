@@ -65,8 +65,8 @@ Goal: Allow players to authenticate and enter the game world.
 Client:
 
 - Login screen.
-- Google SSO development button.
-- Apple SSO development button.
+- Google SSO for desktop using OAuth 2.0, PKCE, system browser, and local loopback callback.
+- Apple SSO pending until Apple Developer and backend identity are configured.
 - Email/password form.
 - Authenticated transition into the world scene.
 
@@ -74,8 +74,9 @@ Identity foundation:
 
 - Local identity service with a backend-ready shape.
 - User persistence in Unity persistent data.
+- PBKDF2-SHA256 password hashing for local email/password accounts.
 - Development session token generation.
-- Identity provider placeholders for Google and Apple.
+- Google identity provider linking by provider subject.
 
 Done when:
 
@@ -87,8 +88,9 @@ Done when:
 Release notes:
 
 - World generation is gated behind authentication.
-- Email/password register and login work locally.
-- Google/Apple buttons create development-provider sessions until real OAuth credentials and backend endpoints exist.
+- Email/password register and login work locally with PBKDF2 password hashing.
+- Google sign-in works locally with a Desktop app OAuth Client ID.
+- Apple sign-in remains pending until real provider credentials and backend endpoints exist.
 
 Explicitly not included:
 
@@ -443,4 +445,4 @@ The client should present state and request actions, not decide authoritative ou
 
 Recommended next milestone: `v0.3 - World Exploration Prototype`.
 
-`v0.2` is now a local identity foundation. Real Google/Apple OAuth and server-side identity validation should be introduced when the backend is created, but the client flow is already in place for replacing the local adapter.
+`v0.2` is now a local identity foundation with real Google OAuth for desktop development. Server-side identity validation, refresh-token handling, Apple SSO, and first-party backend sessions should be introduced when the backend is created.

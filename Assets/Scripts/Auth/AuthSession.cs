@@ -7,6 +7,8 @@ public sealed class AuthSession
     public string email;
     public string displayName;
     public string provider;
+    public string externalSubject;
+    public string avatarUrl;
     public string sessionToken;
     public string issuedAtUtc;
 

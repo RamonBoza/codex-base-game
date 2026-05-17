@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.2.2 - Google OAuth and Password Hardening
+
+Release date: 2026-05-17
+
+### Added
+
+- Added real Google OAuth 2.0 desktop sign-in using the system browser, PKCE, state validation, and a local loopback callback.
+- Added Google profile persistence fields for provider subject and avatar URL.
+- Added local Google OAuth Client ID storage through Unity `PlayerPrefs`.
+- Added the Unity built-in `com.unity.modules.unitywebrequest` module required for OAuth token/profile requests.
+
+### Changed
+
+- Email/password accounts now use PBKDF2-SHA256 with per-user salts instead of the earlier development SHA256 hash.
+- Legacy local password hashes are upgraded to PBKDF2 after successful login.
+- Apple SSO is now shown as pending instead of pretending to be a complete provider.
+- Updated product version to `0.2.2`.
+
+### Notes
+
+- Google SSO is real for local desktop development, but production identity still needs backend-side token validation, refresh handling, and first-party session issuance.
+
 ## v0.2.1 - JSONSerialize Hotfix
 
 Release date: 2026-05-17
