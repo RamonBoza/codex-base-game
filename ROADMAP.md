@@ -32,7 +32,7 @@ The game stays in `0.x` while core systems are still being proven. Each minor ve
 
 ### v0.1 - Unity Cozy World Foundation
 
-Status: Done locally.
+Status: Released as `v0.1.0`.
 
 Goal: Establish the Unity project and first playable exploration base.
 
@@ -50,6 +50,11 @@ Done when:
 - Project opens in Unity.
 - Player can move around the starter map.
 - Changes are committed and pushed to GitHub.
+
+Release notes:
+
+- Product version set to `0.1.0`.
+- Initial generated world, player movement, camera follow, 2D physics package, roadmap, and Unity Codex skill are versioned in GitHub.
 
 ### v0.2 - Identity & Authentication Foundations
 

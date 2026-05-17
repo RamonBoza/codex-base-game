@@ -1,6 +1,8 @@
-# Codex Base Game
+# Cozy Social Game
 
-Base inicial para un cozy game 2D en Unity 6.4.
+Version actual: `v0.1.0`
+
+Base inicial para un cozy social game 2D en Unity 6.4.
 
 ## Que incluye
 
@@ -9,6 +11,7 @@ Base inicial para un cozy game 2D en Unity 6.4.
 - Personaje base con movimiento en 4 direcciones usando `WASD` o flechas.
 - Camara ortografica que sigue al personaje.
 - Sprites temporales generados por codigo, para poder empezar sin assets externos.
+- Roadmap versionado en `ROADMAP.md`.
 
 ## Como abrirlo
 
@@ -27,3 +30,7 @@ Base inicial para un cozy game 2D en Unity 6.4.
 - `Assets/Scripts/CozyWorldBootstrap.cs`: genera el mapa, el jugador y la camara.
 - `Assets/Scripts/PlayerMovement2D.cs`: movimiento 2D del personaje.
 - `Assets/Scripts/CameraFollow2D.cs`: seguimiento suave de camara.
+
+## Estado de version
+
+`v0.1.0` cierra la base jugable inicial: proyecto Unity 2D, escena principal, mapa inicial, jugador, camara, colisiones, roadmap y skill Codex de Unity documentado.
