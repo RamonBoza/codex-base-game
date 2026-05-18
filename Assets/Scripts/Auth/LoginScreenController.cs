@@ -13,14 +13,33 @@ public sealed class LoginScreenController : MonoBehaviour
     private LocalIdentityService identityService;
     private GoogleOAuthService googleOAuthService;
     private AuthSession currentSession;
-    private bool showRegisterForm = true;
+    private bool showRegisterForm;
+    private bool showGoogleSettings;
     private bool isAuthenticating;
-    private string email = "player@cozy.local";
-    private string password = "cozy123";
-    private string displayName = "Cozy Player";
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string displayName = string.Empty;
     private string googleClientIdInput = string.Empty;
-    private string statusMessage = "Inicia sesion o crea una cuenta para entrar al mundo.";
+    private string statusMessage = string.Empty;
     private Vector2 scrollPosition;
+
+    private GUIStyle logoPrimaryStyle;
+    private GUIStyle logoSecondaryStyle;
+    private GUIStyle fieldLabelStyle;
+    private GUIStyle inputStyle;
+    private GUIStyle primaryButtonStyle;
+    private GUIStyle googleButtonStyle;
+    private GUIStyle googleIconStyle;
+    private GUIStyle googleTextStyle;
+    private GUIStyle linkStyle;
+    private GUIStyle statusStyle;
+    private Texture2D backgroundTexture;
+    private Texture2D fieldFillTexture;
+    private Texture2D fieldBorderTexture;
+    private Texture2D primaryButtonTexture;
+    private Texture2D primaryButtonHoverTexture;
+    private Texture2D googleButtonTexture;
+    private Texture2D googleButtonHoverTexture;
 
     private bool IsAuthenticated => currentSession != null && currentSession.IsValid;
 
@@ -52,88 +71,119 @@ public sealed class LoginScreenController : MonoBehaviour
             return;
         }
 
-        DrawLoginPanel();
+        DrawLoginScreen();
     }
 
-    private void DrawLoginPanel()
+    private void DrawLoginScreen()
     {
-        float panelWidth = Mathf.Min(460f, Screen.width - 32f);
-        float panelHeight = Mathf.Min(560f, Screen.height - 32f);
-        Rect panelRect = new Rect((Screen.width - panelWidth) * 0.5f, (Screen.height - panelHeight) * 0.5f, panelWidth, panelHeight);
+        EnsureStyles();
 
-        GUI.Box(panelRect, string.Empty);
+        GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), backgroundTexture);
 
-        GUILayout.BeginArea(new Rect(panelRect.x + 24f, panelRect.y + 20f, panelRect.width - 48f, panelRect.height - 40f));
-        scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false);
+        float formWidth = Mathf.Min(430f, Screen.width - 48f);
+        float contentHeight = CalculateLoginHeight();
+        Rect viewportRect = new Rect(0f, 0f, Screen.width, Screen.height);
+        Rect contentRect = new Rect(0f, 0f, Screen.width, Mathf.Max(Screen.height, contentHeight + 48f));
+        scrollPosition = GUI.BeginScrollView(viewportRect, scrollPosition, contentRect, false, false);
 
-        GUILayout.Label("Cozy Social Game");
-        GUILayout.Space(8f);
-        GUILayout.Label("v0.2.2 - Identity Foundations");
-        GUILayout.Space(16f);
+        float x = (Screen.width - formWidth) * 0.5f;
+        float y = Mathf.Max(24f, (Screen.height - contentHeight) * 0.5f);
 
-        GUILayout.Label(showRegisterForm ? "Modo actual: registro" : "Modo actual: login");
+        DrawLogo(x, y, formWidth);
+        y += 126f;
 
-        if (GUILayout.Button(showRegisterForm ? "Ya tengo cuenta" : "Crear una cuenta nueva"))
-        {
-            showRegisterForm = !showRegisterForm;
-        }
-
-        GUILayout.Space(8f);
-
-        GUILayout.Label("Email");
-        email = GUILayout.TextField(email, 80);
-
-        GUILayout.Label("Contrasena");
-        password = GUILayout.PasswordField(password, '*', 80);
+        email = DrawTextInput(x, ref y, formWidth, "Username", email, false);
+        password = DrawTextInput(x, ref y, formWidth, "Password", password, true);
 
         if (showRegisterForm)
         {
-            GUILayout.Label("Nombre visible");
-            displayName = GUILayout.TextField(displayName, 40);
+            displayName = DrawTextInput(x, ref y, formWidth, "Display name", displayName, false);
         }
 
-        GUILayout.Space(12f);
+        y += 8f;
 
         GUI.enabled = !isAuthenticating;
+        string primaryButtonLabel = showRegisterForm ? "<b>Create account</b>" : "<b>Sign in</b>";
+        Rect primaryButtonRect = new Rect(x + (formWidth - 122f) * 0.5f, y, 122f, 58f);
 
-        if (GUILayout.Button(showRegisterForm ? "Crear cuenta" : "Entrar"))
+        if (GUI.Button(primaryButtonRect, primaryButtonLabel, primaryButtonStyle))
         {
             SubmitEmailForm();
         }
 
-        GUILayout.Space(10f);
-        GUILayout.Label("Google SSO");
-        GUILayout.Label("OAuth Client ID (Desktop app)");
-        googleClientIdInput = GUILayout.TextField(googleClientIdInput, 160);
+        y += 84f;
 
-        if (GUILayout.Button("Guardar Client ID"))
+        Rect googleButtonRect = new Rect(x + (formWidth - 270f) * 0.5f, y, 270f, 58f);
+
+        if (GUI.Button(googleButtonRect, GUIContent.none, googleButtonStyle))
         {
-            SaveGoogleClientId();
+            StartGoogleSignIn();
         }
 
-        if (GUILayout.Button(isAuthenticating ? "Esperando Google..." : "Continuar con Google"))
-        {
-            StartCoroutine(GoogleSignInRoutine());
-        }
-
-        GUILayout.Space(10f);
-        GUILayout.Label("Apple SSO");
-
-        if (GUILayout.Button("Apple pendiente"))
-        {
-            statusMessage = "Apple SSO queda pendiente hasta configurar Apple Developer y backend.";
-        }
-
+        DrawGoogleButtonContent(googleButtonRect);
         GUI.enabled = true;
 
-        GUILayout.Space(12f);
-        GUILayout.Label(statusMessage);
+        y += 76f;
 
-        GUILayout.Space(16f);
-        GUILayout.Label("Nota: el login local es solo para desarrollo. Google usa OAuth real con PKCE, pero la validacion final debera vivir en backend.");
+#if UNITY_EDITOR
+        if (DrawLink(x, ref y, formWidth, "Play as test user"))
+        {
+            SubmitEditorTestUser();
+        }
+#else
+        y += 12f;
+#endif
 
-        GUILayout.EndScrollView();
-        GUILayout.EndArea();
+        if (!showRegisterForm)
+        {
+            if (DrawLink(x, ref y, formWidth, "Forgot username?"))
+            {
+                statusMessage = "La recuperacion de usuario se conectara al backend mas adelante.";
+            }
+
+            if (DrawLink(x, ref y, formWidth, "Forgot password?"))
+            {
+                statusMessage = "La recuperacion de contrasena se conectara al backend mas adelante.";
+            }
+
+            if (DrawLink(x, ref y, formWidth, "Create account"))
+            {
+                showRegisterForm = true;
+                statusMessage = string.Empty;
+            }
+        }
+        else if (DrawLink(x, ref y, formWidth, "Already have an account?"))
+        {
+            showRegisterForm = false;
+            statusMessage = string.Empty;
+        }
+
+        if (DrawLink(x, ref y, formWidth, showGoogleSettings ? "Hide Google settings" : "Google settings"))
+        {
+            showGoogleSettings = !showGoogleSettings;
+            statusMessage = string.Empty;
+        }
+
+        if (showGoogleSettings)
+        {
+            y += 4f;
+            googleClientIdInput = DrawTextInput(x, ref y, formWidth, "OAuth Client ID", googleClientIdInput, false);
+
+            GUI.enabled = !isAuthenticating;
+            Rect saveButtonRect = new Rect(x + (formWidth - 160f) * 0.5f, y - 8f, 160f, 42f);
+
+            if (GUI.Button(saveButtonRect, "Save Client ID", primaryButtonStyle))
+            {
+                SaveGoogleClientId();
+            }
+
+            GUI.enabled = true;
+            y += 58f;
+        }
+
+        DrawStatus(x, y, formWidth);
+
+        GUI.EndScrollView();
     }
 
     private void DrawSessionHud()
@@ -181,6 +231,24 @@ public sealed class LoginScreenController : MonoBehaviour
         statusMessage = error;
     }
 
+#if UNITY_EDITOR
+    private void SubmitEditorTestUser()
+    {
+        if (isAuthenticating)
+        {
+            return;
+        }
+
+        if (identityService.LoginWithEditorTestUser(out AuthSession session, out string error))
+        {
+            EnterWorld(session, "Sesion de test iniciada.");
+            return;
+        }
+
+        statusMessage = error;
+    }
+#endif
+
     private void SaveGoogleClientId()
     {
         googleClientIdInput = googleClientIdInput.Trim();
@@ -190,6 +258,18 @@ public sealed class LoginScreenController : MonoBehaviour
         statusMessage = string.IsNullOrWhiteSpace(googleClientIdInput)
             ? "Google Client ID borrado."
             : "Google Client ID guardado localmente.";
+    }
+
+    private void StartGoogleSignIn()
+    {
+        if (string.IsNullOrWhiteSpace(googleClientIdInput))
+        {
+            showGoogleSettings = true;
+            statusMessage = "Configura primero el Google OAuth Client ID.";
+            return;
+        }
+
+        StartCoroutine(GoogleSignInRoutine());
     }
 
     private System.Collections.IEnumerator GoogleSignInRoutine()
@@ -238,5 +318,223 @@ public sealed class LoginScreenController : MonoBehaviour
             worldBootstrap.SetAuthenticatedPlayer(session.displayName);
             worldBootstrap.RebuildWorld();
         }
+    }
+
+    private float CalculateLoginHeight()
+    {
+        float height = showRegisterForm ? 670f : 600f;
+
+#if UNITY_EDITOR
+        height += 42f;
+#endif
+
+        if (showGoogleSettings)
+        {
+            height += 140f;
+        }
+
+        return height;
+    }
+
+    private void DrawLogo(float x, float y, float width)
+    {
+        GUIContent cozyContent = new GUIContent("cozy");
+        GUIContent socialContent = new GUIContent("social");
+        Vector2 cozySize = logoPrimaryStyle.CalcSize(cozyContent);
+        Vector2 socialSize = logoSecondaryStyle.CalcSize(socialContent);
+        float logoX = x + (width - cozySize.x - socialSize.x - 2f) * 0.5f;
+
+        GUI.Label(new Rect(logoX, y, cozySize.x, 66f), cozyContent, logoPrimaryStyle);
+        GUI.Label(new Rect(logoX + cozySize.x + 2f, y, socialSize.x, 66f), socialContent, logoSecondaryStyle);
+    }
+
+    private string DrawTextInput(float x, ref float y, float width, string label, string value, bool passwordField)
+    {
+        GUI.Label(new Rect(x, y, width, 30f), $"<b>{label}</b>", fieldLabelStyle);
+        y += 38f;
+
+        Rect fieldRect = new Rect(x, y, width, 56f);
+        DrawFieldBackground(fieldRect);
+
+        value = passwordField
+            ? GUI.PasswordField(fieldRect, value, '*', inputStyle)
+            : GUI.TextField(fieldRect, value, inputStyle);
+
+        y += 92f;
+        return value;
+    }
+
+    private bool DrawLink(float x, ref float y, float width, string text)
+    {
+        Rect linkRect = new Rect(x, y, width, 34f);
+        bool clicked = GUI.Button(linkRect, text, linkStyle);
+        y += 54f;
+        return clicked;
+    }
+
+    private void DrawStatus(float x, float y, float width)
+    {
+        if (string.IsNullOrWhiteSpace(statusMessage))
+        {
+            return;
+        }
+
+        GUI.Label(new Rect(x, y, width, 54f), statusMessage, statusStyle);
+    }
+
+    private void DrawGoogleButtonContent(Rect rect)
+    {
+        string label = isAuthenticating ? "Waiting for Google..." : "Sign in with Google";
+        GUI.Label(new Rect(rect.x + 20f, rect.y + 12f, 30f, 34f), "<b>G</b>", googleIconStyle);
+        GUI.Label(new Rect(rect.x + 70f, rect.y + 15f, rect.width - 84f, 30f), label, googleTextStyle);
+    }
+
+    private void DrawFieldBackground(Rect rect)
+    {
+        GUI.DrawTexture(rect, fieldBorderTexture);
+        GUI.DrawTexture(new Rect(rect.x + 1f, rect.y + 1f, rect.width - 2f, rect.height - 2f), fieldFillTexture);
+    }
+
+    private void EnsureStyles()
+    {
+        if (backgroundTexture != null)
+        {
+            return;
+        }
+
+        backgroundTexture = CreateTexture(new Color(0.98f, 0.98f, 0.97f));
+        fieldFillTexture = CreateTexture(Color.white);
+        fieldBorderTexture = CreateTexture(new Color(0.77f, 0.78f, 0.8f));
+        primaryButtonTexture = CreateTexture(new Color(0.19f, 0.49f, 0.82f));
+        primaryButtonHoverTexture = CreateTexture(new Color(0.16f, 0.42f, 0.72f));
+        googleButtonTexture = CreateTexture(Color.white);
+        googleButtonHoverTexture = CreateTexture(new Color(0.96f, 0.97f, 0.98f));
+
+        logoPrimaryStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 48,
+            richText = true,
+            normal = { textColor = new Color(0.87f, 0.28f, 0.24f) }
+        };
+
+        logoSecondaryStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 48,
+            richText = true,
+            normal = { textColor = new Color(0.18f, 0.49f, 0.82f) }
+        };
+
+        fieldLabelStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 22,
+            richText = true,
+            normal = { textColor = new Color(0.13f, 0.14f, 0.18f) }
+        };
+
+        inputStyle = new GUIStyle(GUI.skin.textField)
+        {
+            fontSize = 20,
+            padding = new RectOffset(14, 14, 15, 8),
+            border = new RectOffset(0, 0, 0, 0)
+        };
+        inputStyle.normal.background = null;
+        inputStyle.focused.background = null;
+        inputStyle.hover.background = null;
+        inputStyle.active.background = null;
+
+        primaryButtonStyle = new GUIStyle(GUI.skin.button)
+        {
+            fontSize = 22,
+            richText = true,
+            normal =
+            {
+                background = primaryButtonTexture,
+                textColor = Color.white
+            },
+            hover =
+            {
+                background = primaryButtonHoverTexture,
+                textColor = Color.white
+            },
+            active =
+            {
+                background = primaryButtonHoverTexture,
+                textColor = Color.white
+            },
+            padding = new RectOffset(8, 8, 8, 8)
+        };
+
+        googleButtonStyle = new GUIStyle(GUI.skin.button)
+        {
+            normal =
+            {
+                background = googleButtonTexture,
+                textColor = new Color(0.34f, 0.36f, 0.4f)
+            },
+            hover =
+            {
+                background = googleButtonHoverTexture,
+                textColor = new Color(0.22f, 0.24f, 0.28f)
+            },
+            active =
+            {
+                background = googleButtonHoverTexture,
+                textColor = new Color(0.22f, 0.24f, 0.28f)
+            }
+        };
+
+        googleIconStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 28,
+            richText = true,
+            normal = { textColor = new Color(0.26f, 0.52f, 0.96f) }
+        };
+
+        googleTextStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 18,
+            richText = true,
+            normal = { textColor = new Color(0.42f, 0.43f, 0.46f) }
+        };
+
+        linkStyle = new GUIStyle(GUI.skin.button)
+        {
+            fontSize = 22,
+            normal =
+            {
+                background = null,
+                textColor = new Color(0.12f, 0.45f, 0.85f)
+            },
+            hover =
+            {
+                background = null,
+                textColor = new Color(0.08f, 0.33f, 0.68f)
+            },
+            active =
+            {
+                background = null,
+                textColor = new Color(0.08f, 0.33f, 0.68f)
+            },
+            padding = new RectOffset(0, 0, 0, 0)
+        };
+
+        statusStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 15,
+            wordWrap = true,
+            normal = { textColor = new Color(0.47f, 0.22f, 0.17f) }
+        };
+    }
+
+    private static Texture2D CreateTexture(Color color)
+    {
+        Texture2D texture = new Texture2D(1, 1)
+        {
+            hideFlags = HideFlags.HideAndDontSave
+        };
+
+        texture.SetPixel(0, 0, color);
+        texture.Apply();
+        return texture;
     }
 }

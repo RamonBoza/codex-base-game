@@ -14,6 +14,11 @@ public sealed class LocalIdentityService
     private const int PasswordIterations = 210000;
     private const int PasswordSaltBytes = 16;
     private const int PasswordHashBytes = 32;
+#if UNITY_EDITOR
+    private const string EditorTestEmail = "test@cozy.local";
+    private const string EditorTestPassword = "cozy-test-player";
+    private const string EditorTestDisplayName = "Cozy Tester";
+#endif
 
     private readonly string databasePath;
     private readonly string sessionPath;
@@ -116,6 +121,45 @@ public sealed class LocalIdentityService
         error = null;
         return true;
     }
+
+#if UNITY_EDITOR
+    public bool LoginWithEditorTestUser(out AuthSession session, out string error)
+    {
+        session = null;
+        StoredUser user = FindUserByEmail(EditorTestEmail);
+
+        if (user == null)
+        {
+            string salt = CreatePasswordSalt();
+            user = new StoredUser
+            {
+                userId = Guid.NewGuid().ToString("N"),
+                email = EditorTestEmail,
+                displayName = EditorTestDisplayName,
+                provider = EmailProvider,
+                passwordAlgorithm = PasswordAlgorithm,
+                passwordIterations = PasswordIterations,
+                passwordSalt = salt,
+                passwordHash = HashPasswordPbkdf2(EditorTestPassword, salt, PasswordIterations),
+                createdAtUtc = DateTime.UtcNow.ToString("O")
+            };
+
+            database.users.Add(user);
+            SaveDatabase();
+        }
+        else
+        {
+            user.displayName = EditorTestDisplayName;
+            user.provider = EmailProvider;
+            EnsurePasswordLogin(user, EditorTestPassword);
+        }
+
+        session = CreateSession(user, EmailProvider);
+        SaveSession(session);
+        error = null;
+        return true;
+    }
+#endif
 
     public bool LoginWithGoogle(GoogleOAuthProfile profile, string idToken, out AuthSession session, out string error)
     {
@@ -351,6 +395,20 @@ public sealed class LocalIdentityService
     private void UpgradePasswordHashIfNeeded(StoredUser user, string password)
     {
         if (user.passwordAlgorithm == PasswordAlgorithm && user.passwordIterations >= PasswordIterations)
+        {
+            return;
+        }
+
+        user.passwordAlgorithm = PasswordAlgorithm;
+        user.passwordIterations = PasswordIterations;
+        user.passwordSalt = CreatePasswordSalt();
+        user.passwordHash = HashPasswordPbkdf2(password, user.passwordSalt, user.passwordIterations);
+        SaveDatabase();
+    }
+
+    private void EnsurePasswordLogin(StoredUser user, string password)
+    {
+        if (user.passwordAlgorithm == PasswordAlgorithm && user.passwordIterations >= PasswordIterations && !string.IsNullOrEmpty(user.passwordSalt) && !string.IsNullOrEmpty(user.passwordHash))
         {
             return;
         }
