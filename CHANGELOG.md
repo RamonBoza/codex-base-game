@@ -6,6 +6,8 @@
 
 - Replaced the runtime procedural starter map with an editable Unity scene hierarchy under `Editable World`.
 - Converted visual map pieces, blockers, doors, and spawn points into inspector-editable components.
+- Added in-place expanded house interiors for the initial houses, toggled by editable door triggers.
+- Made house enter/exit triggers automatic and clamped the player inside active interiors.
 - Kept `CozyWorldBootstrap` as an authentication/world activation coordinator instead of a map generator.
 
 ## v0.2.2 - Google OAuth and Password Hardening

@@ -7,7 +7,7 @@ Base inicial para un cozy social game 2D en Unity 6.4.
 ## Que incluye
 
 - Proyecto Unity preparado con la escena `Assets/Scenes/Main.unity`.
-- Primer mapa 2D editable directamente en la escena `Assets/Scenes/Main.unity`: pradera, plaza, caminos, casas, bosque, estanque, limites con colision e interior inicial de Poker House.
+- Primer mapa 2D editable directamente en la escena `Assets/Scenes/Main.unity`: pradera, plaza, caminos, casas, bosque, estanque, limites con colision e interiores ampliados para las casas iniciales.
 - Personaje base con movimiento en 4 direcciones usando `WASD` o flechas.
 - Camara ortografica que sigue al personaje.
 - Piezas visuales placeholder editables desde componentes de Unity, para poder empezar sin assets externos.
@@ -41,7 +41,7 @@ El flujo abre el navegador del sistema, usa PKCE y recibe el `authorization code
 ## Controles
 
 - `W`, `A`, `S`, `D` o flechas: mover al personaje.
-- `E`: interactuar con puertas.
+- Las puertas de las casas se activan automaticamente al acercarse.
 
 ## Edicion del mapa
 
@@ -52,13 +52,19 @@ El mapa ya no se genera proceduralmente en Play. La escena contiene una jerarqui
 - `Nature`: arboles, flores y senales.
 - `Collision`: limites invisibles y bloqueos generales.
 - `Spawn Points`: puntos de aparicion y destinos de puertas.
-- `Interiors`: interiores editables, empezando por `Poker House Interior`.
+
+Cada casa editable contiene:
+
+- `Exterior View`: la fachada visible desde el pueblo.
+- `Interior View`: la version ampliada que se activa al entrar y limita al jugador dentro.
+- `Enter Door Trigger` y `Exit Door Trigger`: puertas automaticas editables.
 
 Componentes principales:
 
 - `SceneRect2D`: rectangulo visual editable por color, tamano y orden de dibujo.
 - `WorldBlocker2D`: bloqueo editable mediante collider.
-- `DoorTransition2D`: puerta con destino, bloqueo/desbloqueo e interaccion.
+- `HouseInterior2D`: cambia entre fachada e interior ampliado de una casa y mantiene al jugador dentro.
+- `DoorTransition2D`: puerta con destino, bloqueo/desbloqueo y activacion automatica por trigger.
 - `PlayerSpawnPoint2D`: marcador de aparicion o destino.
 
 ## Scripts principales

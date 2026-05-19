@@ -5,7 +5,9 @@ using UnityEngine;
 public sealed class DoorTransition2D : MonoBehaviour
 {
     [SerializeField] private PlayerSpawnPoint2D destination;
-    [SerializeField] private bool requireInteraction = true;
+    [SerializeField] private HouseInterior2D houseInterior = null;
+    [SerializeField] private bool exitsHouse = false;
+    [SerializeField] private bool requireInteraction = false;
     [SerializeField] private KeyCode interactionKey = KeyCode.E;
     [SerializeField] private bool isUnlocked = true;
     [SerializeField] private string lockedMessage = "Door is locked.";
@@ -14,7 +16,10 @@ public sealed class DoorTransition2D : MonoBehaviour
     [SerializeField] private float reentryCooldownSeconds = 0.35f;
 
     private PlayerMovement2D playerInRange;
+    private PlayerMovement2D cachedPlayer;
+    private bool wasPlayerDetected;
     private float lastTransitionTime = -999f;
+    private static float nextAllowedTransitionTime;
 
     public PlayerSpawnPoint2D Destination
     {
@@ -75,10 +80,36 @@ public sealed class DoorTransition2D : MonoBehaviour
             return;
         }
 
-        if (requireInteraction && playerInRange != null && Input.GetKeyDown(interactionKey))
+        PlayerMovement2D player = ResolvePlayerInRange();
+
+        if (player == null)
         {
-            TryTransition(playerInRange);
+            wasPlayerDetected = false;
+            return;
         }
+
+        bool playerDetected = IsPlayerInDetectionArea(player);
+        playerInRange = playerDetected ? player : null;
+
+        if (!playerDetected)
+        {
+            wasPlayerDetected = false;
+            return;
+        }
+
+        if (requireInteraction && Input.GetKeyDown(interactionKey))
+        {
+            wasPlayerDetected = TryTransition(player);
+            return;
+        }
+
+        if (!requireInteraction && (!wasPlayerDetected || Time.time >= nextAllowedTransitionTime))
+        {
+            wasPlayerDetected = TryTransition(player);
+            return;
+        }
+
+        wasPlayerDetected = true;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -105,26 +136,50 @@ public sealed class DoorTransition2D : MonoBehaviour
         if (player != null && player == playerInRange)
         {
             playerInRange = null;
+            wasPlayerDetected = false;
         }
     }
 
-    private void TryTransition(PlayerMovement2D player)
+    private bool TryTransition(PlayerMovement2D player)
     {
         if (Time.time - lastTransitionTime < reentryCooldownSeconds)
         {
-            return;
+            return false;
+        }
+
+        if (Time.time < nextAllowedTransitionTime)
+        {
+            return false;
         }
 
         if (!isUnlocked)
         {
             Debug.Log(lockedMessage);
-            return;
+            nextAllowedTransitionTime = Time.time + reentryCooldownSeconds;
+            return false;
+        }
+
+        if (houseInterior != null)
+        {
+            if (exitsHouse)
+            {
+                houseInterior.Exit(player);
+            }
+            else
+            {
+                houseInterior.Enter(player);
+            }
+
+            lastTransitionTime = Time.time;
+            nextAllowedTransitionTime = Time.time + reentryCooldownSeconds;
+            playerInRange = null;
+            return true;
         }
 
         if (destination == null)
         {
             Debug.LogWarning($"Door '{name}' has no destination spawn point.", this);
-            return;
+            return false;
         }
 
         Rigidbody2D body = player.GetComponent<Rigidbody2D>();
@@ -141,6 +196,43 @@ public sealed class DoorTransition2D : MonoBehaviour
         }
 
         lastTransitionTime = Time.time;
+        nextAllowedTransitionTime = Time.time + reentryCooldownSeconds;
         playerInRange = null;
+        return true;
+    }
+
+    private PlayerMovement2D ResolvePlayerInRange()
+    {
+        if (playerInRange != null)
+        {
+            return playerInRange;
+        }
+
+        if (cachedPlayer == null || !cachedPlayer.isActiveAndEnabled)
+        {
+            cachedPlayer = FindAnyObjectByType<PlayerMovement2D>(FindObjectsInactive.Exclude);
+        }
+
+        return cachedPlayer;
+    }
+
+    private bool IsPlayerInDetectionArea(PlayerMovement2D player)
+    {
+        Vector2 center = transform.TransformPoint(triggerOffset);
+        Vector2 size = Vector2.Scale(triggerSize, Abs(transform.lossyScale));
+        Bounds detectionBounds = new Bounds(center, new Vector3(Mathf.Max(0.1f, size.x), Mathf.Max(0.1f, size.y), 10f));
+        Collider2D playerCollider = player.GetComponent<Collider2D>();
+
+        if (playerCollider != null)
+        {
+            return detectionBounds.Intersects(playerCollider.bounds);
+        }
+
+        return detectionBounds.Contains(player.transform.position);
+    }
+
+    private static Vector2 Abs(Vector3 value)
+    {
+        return new Vector2(Mathf.Abs(value.x), Mathf.Abs(value.y));
     }
 }
