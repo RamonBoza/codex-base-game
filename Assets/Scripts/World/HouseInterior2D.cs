@@ -61,6 +61,13 @@ public sealed class HouseInterior2D : MonoBehaviour
         ApplyCameraZoom(exteriorCameraZoom);
     }
 
+    public void ResetToExterior()
+    {
+        isInside = false;
+        activePlayer = null;
+        ShowInterior(false);
+    }
+
     private void LateUpdate()
     {
         if (!Application.isPlaying || !isInside || !clampPlayerInside || activePlayer == null || interiorView == null)

@@ -1,13 +1,13 @@
 # Cozy Social Game
 
-Version actual: `v0.2.2`
+Version actual: `v0.3.0`
 
 Base inicial para un cozy social game 2D en Unity 6.4.
 
 ## Que incluye
 
 - Proyecto Unity preparado con la escena `Assets/Scenes/Main.unity`.
-- Primer mapa 2D editable directamente en la escena `Assets/Scenes/Main.unity`: pradera, plaza, caminos, casas, bosque, estanque, limites con colision e interiores ampliados para las casas iniciales.
+- Primer mundo 2D separado por escenas: `PlayerHomestead`, `ForestPassage` y `FrenchCardTown`.
 - Personaje base con movimiento en 4 direcciones usando `WASD` o flechas.
 - Camara ortografica que sigue al personaje.
 - Piezas visuales placeholder editables desde componentes de Unity, para poder empezar sin assets externos.
@@ -16,6 +16,9 @@ Base inicial para un cozy social game 2D en Unity 6.4.
 - Sesion persistida localmente con token de desarrollo.
 - Google SSO real para desktop usando OAuth 2.0, PKCE y callback loopback local.
 - Apple SSO marcado como pendiente hasta configurar Apple Developer y backend.
+- Spawn autenticado en `PlayerHomestead`.
+- `ForestPassage` como bosque grande entre mapas, con diferentes zonas visuales: pinar, riachuelo, claro de setas y ruinas.
+- `FrenchCardTown` como ciudad independiente con muralla, puerta oeste, Poker House y Blackjack House.
 - Roadmap versionado en `ROADMAP.md`.
 
 ## Como abrirlo
@@ -43,9 +46,19 @@ El flujo abre el navegador del sistema, usa PKCE y recibe el `authorization code
 - `W`, `A`, `S`, `D` o flechas: mover al personaje.
 - Las puertas de las casas se activan automaticamente al acercarse.
 
+## Escenas del mundo
+
+`Main.unity` es la escena de arranque/login y solo contiene el runtime persistente: bootstrap, login, jugador y camara. Tras autenticar, carga la escena inicial `PlayerHomestead`.
+
+- `Assets/Scenes/PlayerHomestead.unity`: casa del jugador con interior, jardin, vallas y salida este hacia el bosque.
+- `Assets/Scenes/ForestPassage.unity`: bosque grande que conecta mapas y tiene varias vistas/ambientes internos.
+- `Assets/Scenes/FrenchCardTown.unity`: ciudad de cartas con murallas, entrada/salida oeste y edificios de juegos.
+
+Los cambios de escena se hacen con portales automaticos editables. El jugador y la camara persisten entre escenas.
+
 ## Edicion del mapa
 
-El mapa ya no se genera proceduralmente en Play. La escena contiene una jerarquia editable bajo `Editable World`:
+El mapa ya no se genera proceduralmente en Play. Cada escena de mundo contiene una jerarquia editable bajo `Editable World`:
 
 - `Ground Layer`: suelo, caminos, agua y plaza.
 - `Buildings`: casas, puertas y decoracion de pueblo.
@@ -64,8 +77,12 @@ Componentes principales:
 - `SceneRect2D`: rectangulo visual editable por color, tamano y orden de dibujo.
 - `WorldBlocker2D`: bloqueo editable mediante collider.
 - `HouseInterior2D`: cambia entre fachada e interior ampliado de una casa y mantiene al jugador dentro.
+- `RuntimeHouseInterior2D`: interior placeholder ampliado para casas de escenas separadas, con entrada/salida automaticas.
 - `DoorTransition2D`: puerta con destino, bloqueo/desbloqueo y activacion automatica por trigger.
+- `ScenePortal2D`: portal automatico entre escenas con escena destino y spawn destino configurables.
 - `PlayerSpawnPoint2D`: marcador de aparicion o destino.
+- `WorldMapRegion2D`: marcador editable de region/mapa para Player Homestead, Forest Passage y French Card Town.
+- `WorldAreaMood2D`: zona editable que cambia paleta de camara y musica de ambiente al entrar en una ciudad.
 
 ## Scripts principales
 
@@ -75,4 +92,4 @@ Componentes principales:
 
 ## Estado de version
 
-`v0.2.2` cierra una base de identidad local mas realista: login/registro con PBKDF2, Google OAuth desktop con PKCE, sesion persistida y entrada autenticada al mundo.
+`v0.3.0` cierra el prototipo de exploracion por escenas: el jugador entra en `PlayerHomestead`, cruza `ForestPassage` y llega a `FrenchCardTown`, donde puede acercarse a Poker House o Blackjack House.

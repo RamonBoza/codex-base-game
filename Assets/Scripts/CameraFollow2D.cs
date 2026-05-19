@@ -14,6 +14,8 @@ public sealed class CameraFollow2D : MonoBehaviour
 
     private Vector3 velocity;
 
+    public bool UseBounds => useBounds;
+
     private void OnEnable()
     {
         if (!ensureCameraComponent)
@@ -42,8 +44,7 @@ public sealed class CameraFollow2D : MonoBehaviour
 
         if (target != null)
         {
-            transform.position = GetDesiredPosition();
-            velocity = Vector3.zero;
+            SnapToTarget();
         }
     }
 
@@ -52,6 +53,22 @@ public sealed class CameraFollow2D : MonoBehaviour
         minBounds = min;
         maxBounds = max;
         useBounds = true;
+    }
+
+    public void SetBoundsEnabled(bool isEnabled)
+    {
+        useBounds = isEnabled;
+    }
+
+    public void SnapToTarget()
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        transform.position = GetDesiredPosition();
+        velocity = Vector3.zero;
     }
 
     private void LateUpdate()

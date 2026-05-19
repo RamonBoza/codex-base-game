@@ -102,14 +102,17 @@ Explicitly not included:
 
 ### v0.3 - World Exploration Prototype
 
+Status: Implemented in `v0.3.0`.
+
 Goal: Build the cozy world structure and exploration loop.
 
 World:
 
 - Player house as spawn point.
-- Connected paths between towns.
-- Exploration areas between towns.
+- Connected paths between map regions.
+- Exploration areas between regions.
 - Initial themed town: French Card Town.
+- Scene-based world loading: one Unity scene per city/major area.
 
 Town:
 
@@ -131,6 +134,8 @@ Done when:
 - Player can explore the world.
 - Player can reach French Card Town.
 - Player can enter Poker House.
+- Player can enter and leave placeholder interiors for the first houses.
+- Player can move between city and forest scenes through configured entrances/exits.
 
 Explicitly not included:
 
@@ -443,6 +448,6 @@ The client should present state and request actions, not decide authoritative ou
 
 ## Current Next Step
 
-Recommended next milestone: `v0.3 - World Exploration Prototype`.
+Recommended next milestone: `v0.4 - Poker Vertical Slice Offline`.
 
-`v0.2` is now a local identity foundation with real Google OAuth for desktop development. Server-side identity validation, refresh-token handling, Apple SSO, and first-party backend sessions should be introduced when the backend is created.
+`v0.3` now covers the exploration loop from authenticated entry into Player Homestead, through a separate Forest Passage scene, into French Card Town. The next product risk is proving the first real game loop inside Poker House before adding backend multiplayer.

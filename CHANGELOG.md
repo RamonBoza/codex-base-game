@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- Added the `v0.3.0` exploration loop: authenticated players now spawn in Player Homestead before entering the wider world.
+- Added an editable French Card Town mood zone that shifts camera palette and crossfades procedural ambient music as the player approaches town.
+- Added French Card Town hierarchy markers in the scene for designer-editable town tuning.
+- Added editable map region markers for Player Homestead, Forest Passage, and French Card Town.
+- Added separate world scenes for `PlayerHomestead`, `ForestPassage`, and `FrenchCardTown`.
+- Added `ScenePortal2D` automatic scene portals with target scene and spawn configuration.
+- Added `RuntimeHouseInterior2D` interiors for Player House, Poker House, and Blackjack House in the separated scene flow.
+
 ### Changed
 
 - Replaced the runtime procedural starter map with an editable Unity scene hierarchy under `Editable World`.
@@ -9,6 +19,11 @@
 - Added in-place expanded house interiors for the initial houses, toggled by editable door triggers.
 - Made house enter/exit triggers automatic and clamped the player inside active interiors.
 - Kept `CozyWorldBootstrap` as an authentication/world activation coordinator instead of a map generator.
+- Reworked the starter world layout into visibly separated map regions connected by forest paths.
+- Reworked exploration loading so the login scene keeps player/camera persistent and loads world scenes through Unity `SceneManager`.
+- Cleaned `Main.unity` so it no longer contains the old world map.
+- Updated the authenticated start spawn to begin inside Player House.
+- Updated product version to `0.3.0`.
 
 ## v0.2.2 - Google OAuth and Password Hardening
 
