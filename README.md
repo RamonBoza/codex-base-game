@@ -7,10 +7,10 @@ Base inicial para un cozy social game 2D en Unity 6.4.
 ## Que incluye
 
 - Proyecto Unity preparado con la escena `Assets/Scenes/Main.unity`.
-- Primer mapa 2D generado al pulsar Play: pradera, plaza, caminos, casas, bosque, estanque y limites con colision.
+- Primer mapa 2D editable directamente en la escena `Assets/Scenes/Main.unity`: pradera, plaza, caminos, casas, bosque, estanque, limites con colision e interior inicial de Poker House.
 - Personaje base con movimiento en 4 direcciones usando `WASD` o flechas.
 - Camara ortografica que sigue al personaje.
-- Sprites temporales generados por codigo, para poder empezar sin assets externos.
+- Piezas visuales placeholder editables desde componentes de Unity, para poder empezar sin assets externos.
 - Pantalla de login/registro local antes de entrar al mundo.
 - Login local con contrasenas hasheadas mediante PBKDF2-SHA256.
 - Sesion persistida localmente con token de desarrollo.
@@ -41,10 +41,29 @@ El flujo abre el navegador del sistema, usa PKCE y recibe el `authorization code
 ## Controles
 
 - `W`, `A`, `S`, `D` o flechas: mover al personaje.
+- `E`: interactuar con puertas.
+
+## Edicion del mapa
+
+El mapa ya no se genera proceduralmente en Play. La escena contiene una jerarquia editable bajo `Editable World`:
+
+- `Ground Layer`: suelo, caminos, agua y plaza.
+- `Buildings`: casas, puertas y decoracion de pueblo.
+- `Nature`: arboles, flores y senales.
+- `Collision`: limites invisibles y bloqueos generales.
+- `Spawn Points`: puntos de aparicion y destinos de puertas.
+- `Interiors`: interiores editables, empezando por `Poker House Interior`.
+
+Componentes principales:
+
+- `SceneRect2D`: rectangulo visual editable por color, tamano y orden de dibujo.
+- `WorldBlocker2D`: bloqueo editable mediante collider.
+- `DoorTransition2D`: puerta con destino, bloqueo/desbloqueo e interaccion.
+- `PlayerSpawnPoint2D`: marcador de aparicion o destino.
 
 ## Scripts principales
 
-- `Assets/Scripts/CozyWorldBootstrap.cs`: genera el mapa, el jugador y la camara.
+- `Assets/Scripts/CozyWorldBootstrap.cs`: conecta la escena editable, el jugador y la camara tras login.
 - `Assets/Scripts/PlayerMovement2D.cs`: movimiento 2D del personaje.
 - `Assets/Scripts/CameraFollow2D.cs`: seguimiento suave de camara.
 

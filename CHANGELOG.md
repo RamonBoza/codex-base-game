@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Replaced the runtime procedural starter map with an editable Unity scene hierarchy under `Editable World`.
+- Converted visual map pieces, blockers, doors, and spawn points into inspector-editable components.
+- Kept `CozyWorldBootstrap` as an authentication/world activation coordinator instead of a map generator.
+
 ## v0.2.2 - Google OAuth and Password Hardening
 
 Release date: 2026-05-17

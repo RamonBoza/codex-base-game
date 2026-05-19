@@ -21,6 +21,24 @@ public sealed class PlayerMovement2D : MonoBehaviour
     private void Awake()
     {
         body = GetComponent<Rigidbody2D>();
+        if (body == null)
+        {
+            body = gameObject.AddComponent<Rigidbody2D>();
+        }
+
+        body.gravityScale = 0f;
+        body.interpolation = RigidbodyInterpolation2D.Interpolate;
+        body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        body.constraints = RigidbodyConstraints2D.FreezeRotation;
+
+        if (GetComponent<Collider2D>() == null)
+        {
+            CapsuleCollider2D capsuleCollider = gameObject.AddComponent<CapsuleCollider2D>();
+            capsuleCollider.direction = CapsuleDirection2D.Vertical;
+            capsuleCollider.size = new Vector2(0.58f, 0.9f);
+            capsuleCollider.offset = new Vector2(0f, 0.45f);
+        }
+
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
