@@ -1,6 +1,6 @@
 # Cozy Social Game
 
-Version actual: `v0.3.0`
+Version actual: `v0.4.0`
 
 Base inicial para un cozy social game 2D en Unity 6.4.
 
@@ -19,6 +19,9 @@ Base inicial para un cozy social game 2D en Unity 6.4.
 - Spawn autenticado en `PlayerHomestead`.
 - `ForestPassage` como bosque grande entre mapas, con diferentes zonas visuales: pinar, riachuelo, claro de setas y ruinas.
 - `FrenchCardTown` como ciudad independiente con muralla, puerta oeste, Poker House y Blackjack House.
+- Primera vertical slice offline de Poker en `Poker House`.
+- Mesa interactiva de Poker dentro del interior de la casa.
+- Partida local heads-up contra bot con cartas privadas, comunidad, apuestas, folds, showdown y resultados.
 - Roadmap versionado en `ROADMAP.md`.
 
 ## Como abrirlo
@@ -45,6 +48,8 @@ El flujo abre el navegador del sistema, usa PKCE y recibe el `authorization code
 
 - `W`, `A`, `S`, `D` o flechas: mover al personaje.
 - Las puertas de las casas se activan automaticamente al acercarse.
+- En Poker House, `E`: sentarse en la mesa si estas cerca.
+- En partida: usa los botones de la UI para pasar/igualar, apostar/subir o retirarte.
 
 ## Escenas del mundo
 
@@ -78,6 +83,7 @@ Componentes principales:
 - `WorldBlocker2D`: bloqueo editable mediante collider.
 - `HouseInterior2D`: cambia entre fachada e interior ampliado de una casa y mantiene al jugador dentro.
 - `RuntimeHouseInterior2D`: interior placeholder ampliado para casas de escenas separadas, con entrada/salida automaticas.
+- `PokerMatchController2D`: mesa de Poker offline, transicion a modo partida y UI de mano local.
 - `DoorTransition2D`: puerta con destino, bloqueo/desbloqueo y activacion automatica por trigger.
 - `ScenePortal2D`: portal automatico entre escenas con escena destino y spawn destino configurables.
 - `PlayerSpawnPoint2D`: marcador de aparicion o destino.
@@ -89,7 +95,11 @@ Componentes principales:
 - `Assets/Scripts/CozyWorldBootstrap.cs`: conecta la escena editable, el jugador y la camara tras login.
 - `Assets/Scripts/PlayerMovement2D.cs`: movimiento 2D del personaje.
 - `Assets/Scripts/CameraFollow2D.cs`: seguimiento suave de camara.
+- `Assets/Scripts/Poker/PokerRules.cs`: reglas offline de Poker y evaluador de manos.
+- `Assets/Scripts/Poker/PokerMatchController2D.cs`: mesa interactiva y UI de partida offline.
 
 ## Estado de version
 
 `v0.3.0` cierra el prototipo de exploracion por escenas: el jugador entra en `PlayerHomestead`, cruza `ForestPassage` y llega a `FrenchCardTown`, donde puede acercarse a Poker House o Blackjack House.
+
+`v0.4.0` anade la primera vertical slice de juego: el jugador puede entrar en Poker House, sentarse en una mesa, jugar una mano offline contra un bot y volver al interior.

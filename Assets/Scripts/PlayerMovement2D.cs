@@ -5,6 +5,7 @@ public sealed class PlayerMovement2D : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 4.25f;
     [SerializeField] private bool allowDiagonalMovement = true;
+    [SerializeField] private bool inputEnabled = true;
 
     private Rigidbody2D body;
     private SpriteRenderer spriteRenderer;
@@ -12,10 +13,26 @@ public sealed class PlayerMovement2D : MonoBehaviour
     private Vector2 lastFacingDirection = Vector2.down;
 
     public Vector2 LastFacingDirection => lastFacingDirection;
+    public bool IsInputEnabled => inputEnabled;
 
     public void Configure(float speed)
     {
         moveSpeed = speed;
+    }
+
+    public void SetInputEnabled(bool isEnabled)
+    {
+        inputEnabled = isEnabled;
+
+        if (!inputEnabled)
+        {
+            moveInput = Vector2.zero;
+
+            if (body != null)
+            {
+                body.linearVelocity = Vector2.zero;
+            }
+        }
     }
 
     private void Awake()
@@ -44,6 +61,12 @@ public sealed class PlayerMovement2D : MonoBehaviour
 
     private void Update()
     {
+        if (!inputEnabled)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
+
         moveInput = ReadMovementInput();
 
         if (moveInput.sqrMagnitude > 0.001f)

@@ -147,6 +147,8 @@ Explicitly not included:
 
 ### v0.4 - Poker Vertical Slice Offline
 
+Status: Implemented in `v0.4.0`.
+
 Goal: Create the first complete playable gameplay loop.
 
 Core loop:
@@ -164,6 +166,7 @@ Poker House:
 - Dealer NPC placeholder.
 - Cozy ambience.
 - Table interaction prompt.
+- Runtime placeholder Poker table in the Poker House interior.
 
 Match flow:
 
@@ -181,6 +184,7 @@ Poker gameplay:
 - Betting rounds.
 - Winner determination.
 - Simple AI opponent.
+- Lightweight heads-up Texas Hold'em slice with community cards and local bot decisions.
 
 Client states:
 
@@ -195,6 +199,12 @@ Done when:
 - Player can sit at a table.
 - Player can play a full poker match against a bot.
 - Player can return to the world after results.
+
+Release notes:
+
+- Product version set to `0.4.0`.
+- Poker House now contains an interactive table.
+- The player can sit with `E`, play a local Poker hand against a bot, see results, start another hand, or return to exploration.
 
 Explicitly not included:
 
@@ -448,6 +458,6 @@ The client should present state and request actions, not decide authoritative ou
 
 ## Current Next Step
 
-Recommended next milestone: `v0.4 - Poker Vertical Slice Offline`.
+Recommended next milestone: `v0.5 - Backend Match Framework`.
 
-`v0.3` now covers the exploration loop from authenticated entry into Player Homestead, through a separate Forest Passage scene, into French Card Town. The next product risk is proving the first real game loop inside Poker House before adding backend multiplayer.
+`v0.4` proves the first offline match loop inside Poker House. The next product risk is preparing the backend match architecture before converting Poker to online multiplayer.

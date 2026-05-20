@@ -798,6 +798,7 @@ GameObject:
   - component: {fileID: 100040}
   - component: {fileID: 100041}
   - component: {fileID: 100191}
+  - component: {fileID: 100193}
   m_Layer: 0
   m_Name: Poker House Door
   m_TagString: Untagged
@@ -3224,3 +3225,28 @@ MonoBehaviour:
   floorColor: {r: 0.67, g: 0.56, b: 0.4, a: 1}
   wallColor: {r: 0.83, g: 0.72, b: 0.54, a: 1}
   rugColor: {r: 0.16, g: 0.35, b: 0.29, a: 1}
+--- !u!114 &100193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e9cb1b0ba2248cea252d7cde049421e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  houseInterior: {fileID: 100191}
+  tableLabel: Poker Table
+  sitKey: 101
+  tableOffset: {x: 0, y: 0.35}
+  tableVisualSize: {x: 2.65, y: 1.15}
+  tableTriggerSize: {x: 3.2, y: 2.15}
+  createTableVisual: 1
+  tableColor: {r: 0.1764706, g: 0.4509804, b: 0.2901961, a: 1}
+  tableRailColor: {r: 0.36078432, g: 0.24313726, b: 0.15686275, a: 1}
+  startingChips: 100
+  ante: 5
+  betSize: 10
+  matchCameraZoom: 3.7

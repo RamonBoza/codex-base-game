@@ -4,6 +4,11 @@
 
 ### Added
 
+- Added the `v0.4.0` Poker offline vertical slice inside Poker House.
+- Added `PokerMatchController2D` for sitting at a runtime table, entering match mode, showing match UI, and returning to exploration.
+- Added an offline heads-up Poker engine with deck shuffle, private cards, community cards, betting rounds, fold outcomes, showdown evaluation, and simple bot decisions.
+- Added player input locking while a Poker match is active.
+- Added a polished Poker table UI with card faces, hidden bot cards, community slots, pot display, chip counters, action bar, and hand log.
 - Added the `v0.3.0` exploration loop: authenticated players now spawn in Player Homestead before entering the wider world.
 - Added an editable French Card Town mood zone that shifts camera palette and crossfades procedural ambient music as the player approaches town.
 - Added French Card Town hierarchy markers in the scene for designer-editable town tuning.
@@ -14,6 +19,7 @@
 
 ### Changed
 
+- Updated product version to `0.4.0`.
 - Replaced the runtime procedural starter map with an editable Unity scene hierarchy under `Editable World`.
 - Converted visual map pieces, blockers, doors, and spawn points into inspector-editable components.
 - Added in-place expanded house interiors for the initial houses, toggled by editable door triggers.

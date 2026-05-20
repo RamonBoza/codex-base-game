@@ -38,6 +38,8 @@ public sealed class RuntimeHouseInterior2D : MonoBehaviour
     private float nextAllowedTransitionTime;
 
     public bool IsInside => isInside;
+    public Vector2 InteriorCenter => interiorCenter;
+    public Vector2 InteriorSize => interiorSize;
 
     private void Awake()
     {
@@ -251,6 +253,11 @@ public sealed class RuntimeHouseInterior2D : MonoBehaviour
     private Vector2 InteriorToWorld(Vector2 localPoint)
     {
         return interiorCenter + localPoint;
+    }
+
+    public Vector2 GetInteriorWorldPoint(Vector2 localPoint)
+    {
+        return InteriorToWorld(localPoint);
     }
 
     private Vector2 GetExteriorReturnPosition()
